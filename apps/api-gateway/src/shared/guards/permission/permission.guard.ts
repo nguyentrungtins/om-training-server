@@ -1,44 +1,83 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role, Permission } from '../../entities';
-import { UserService } from '../../../modules/user/user.service';
+import { UserService } from 'apps/api-gateway/src/modules/user/user.service';
+import { decode } from 'next-auth/jwt';
 
 @Injectable()
-export class PermissionsGuard implements CanActivate {
+export class PermissionGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly userService: UserService // Inject your role service
+    private readonly userService: UserService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredPermissions = this.reflector.get<Permission[]>(
+    const requiredPermissions = this.reflector.get<string[]>(
       'permissions',
-      context.getClass()
+      context.getHandler()
     );
-
-    if (!requiredPermissions) {
-      return true; // No required permissions defined, allow access
-    }
-
     const request = context.switchToHttp().getRequest();
-    const user = request.user; // Assuming you have user information attached to the request
+    const reqMethod = request.method as string;
+    const authHeader = request.headers.authorization;
 
-    const userRole = await this.userService.(user.role); // Fetch the user's role from the database
-
-    if (!userRole) {
-      return false; // Invalid user role, deny access
+    console.log('Required Permission', requiredPermissions);
+    if (!requiredPermissions) {
+      return true; // No permissions required, allow access
     }
+    const email = await this.getUserEmail(authHeader);
 
-    const userPermissions = userRole.permissions; // Assuming the role object has a 'permissions' property
-
-    if (!userPermissions) {
-      return false; // Invalid user role permissions, deny access
+    if (
+      await this.checkUserHasPermission(
+        email,
+        requiredPermissions,
+        reqMethod.toLowerCase()
+      )
+    ) {
+      return true;
+    } else {
+      return false;
     }
+  }
+  private async checkUserHasPermission(
+    email: string | null,
+    permissions: string[],
+    method: string
+  ) {
+    const isUserHasPermission = await this.userService.checkUserPermission({
+      email,
+      roles: permissions,
+      permissions: method,
+    });
+    return isUserHasPermission;
+  }
+  private async getUserEmail(authHeader: string) {
+    // console.log()
 
-    const hasPermission = requiredPermissions.every((permission) =>
-      userPermissions.includes(permission)
-    );
+    // console.log('cookies: ', request.headers.cookie);
+    // const authHeader = request.cookies['next-auth.session-token'];
 
-    return hasPermission;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+
+      try {
+        const decoded = await decode({
+          token: token,
+          secret: 'nguyentrungtin',
+        });
+
+        if (decoded.email) {
+          return decoded.email;
+        } else {
+          throw new ForbiddenException('Invalid User');
+        }
+      } catch (error) {
+        throw new ForbiddenException('Invalid User');
+      }
+    }
+    return null;
   }
 }

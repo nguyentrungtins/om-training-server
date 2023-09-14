@@ -1,17 +1,32 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ClientKafka } from '@nestjs/microservices';
-import { ProducerService } from '../kafka/producer.service';
+import {
+  Inject,
+  Injectable,
+  OnApplicationShutdown,
+  OnModuleInit,
+} from '@nestjs/common';
+import { ClientKafka } from '@nestjs/microservices/client';
 
 @Injectable()
-export class AppService {
+export class AppService implements OnModuleInit, OnApplicationShutdown {
   constructor(
-    @Inject('NOTI_SERVICE_KAFKA') private readonly notiClient: ClientKafka,
-    private readonly producerService: ProducerService
+    @Inject('USERS_SERVICE') private readonly usersService: ClientKafka
   ) {}
-  async helloUser() {
-    await this.producerService.produce('hello_user', {
-      value: 'Hello World'
+  async onApplicationShutdown() {
+    await this.usersService.close();
+  }
+  async onModuleInit() {
+    const requestPatterns = ['users.userCreation'];
+    requestPatterns.forEach((pattern) => {
+      this.usersService.subscribeToResponseOf(pattern);
     });
-    return 'Hello World!';
+    await this.usersService.connect();
+  }
+  async helloUser() {
+    return await new Promise<any>((resolve) =>
+      this.usersService.send('users.userCreation', 'alo').subscribe((data) => {
+        console.log(data);
+        resolve(data);
+      })
+    );
   }
 }

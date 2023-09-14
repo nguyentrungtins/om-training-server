@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
-  getData(): { message: string } {
-    return { message: 'Hello API' };
+  async helloUser(createUserDto: any) {
+    console.log('Users::createUser');
+    return 'alo';
   }
 }

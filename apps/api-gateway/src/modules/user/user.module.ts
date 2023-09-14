@@ -9,6 +9,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../../shared/entities/User.entity';
 import { Role } from '../../shared/entities/Role.entity';
 import { Permission } from '../../shared/entities/Permission.entity';
+import { PermissionsModule } from '../permissions/permission.module';
 
 @Module({
   imports: [
@@ -36,7 +37,7 @@ import { Permission } from '../../shared/entities/Permission.entity';
     ]),
   ],
   controllers: [UserController],
-  providers: [UserService, JwtAuthGuard],
+  providers: [UserService, JwtAuthGuard, PermissionsModule],
   exports: [JwtAuthGuard, UserService],
 })
 export class UserModule {}

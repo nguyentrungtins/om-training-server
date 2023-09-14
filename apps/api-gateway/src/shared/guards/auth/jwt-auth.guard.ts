@@ -17,7 +17,6 @@ export class JwtAuthGuard implements CanActivate {
           secret: 'nguyentrungtin',
         });
 
-        console.log('decoded: ', decoded);
         if (!decoded || !decoded.exp) {
           return false;
         } else if (decoded.exp) {

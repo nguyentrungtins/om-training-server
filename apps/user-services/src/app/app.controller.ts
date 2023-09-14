@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Header } from '@nestjs/common';
 
 import { AppService } from './app.service';
 import { MessagePattern, Transport } from '@nestjs/microservices';
@@ -8,15 +8,9 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @MessagePattern({ cmd: 'hello_user_tcp' }, Transport.TCP)
-  // @Get('/hello')
-  async sayHelloUser() {
-    console.log('hey!! api-gateway just called me!!!');
+  @Header('Content-Type', 'application/json')
+  async create() {
     const result = await this.appService.helloUser();
-    return {
-      status: 'OK',
-      code: 200,
-      message: 'Get data success',
-      data: result
-    };
+    return result;
   }
 }

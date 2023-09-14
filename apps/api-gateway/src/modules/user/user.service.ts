@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import { ClientProxy } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,6 +12,8 @@ import { Permission } from '../../shared/entities/Permission.entity';
 // import * as bcrypt from 'bcrypt';
 import { updateRolePermissions } from './dto/update-permision-role.dto';
 import { updateUserRole } from './dto/update-user-role.dto';
+import { CheckUserPermission } from './dto/check-user-permission.dto';
+import { Login } from './dto/login.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -25,7 +27,6 @@ export class UserService {
   ) {}
 
   helloUser() {
-    console.log('im here');
     return this.userClient
       .send({ cmd: 'hello_user_tcp' }, { message: 'hello from gateway' })
       .toPromise();
@@ -35,10 +36,30 @@ export class UserService {
     return await this.userRepository.findBy({ email: email });
   }
 
+  async login(user: Login) {
+    const findUser = await this.userRepository.findOneBy({
+      email: user.email,
+      password: user.password,
+    });
+    if (!findUser) {
+      return new NotFoundException('Invalid Credential');
+    }
+    const roleList = findUser.roles.map((role) => {
+      return role.name;
+    });
+    const userFilterd = {
+      email: findUser.email,
+      role: roleList,
+      name: findUser.name,
+      id: findUser.id,
+    };
+    return userFilterd;
+  }
+
   async findAllUser() {
     const users = await this.userRepository.find();
 
-    let userDataFiltered = [];
+    const userDataFiltered = [];
     users.map((user) => {
       let permissions = [];
       const roles = user.roles.map((role) => {
@@ -69,9 +90,43 @@ export class UserService {
     return this.userRepository.save(newUser);
   }
 
+  async checkUserPermission(userCredential: CheckUserPermission) {
+    try {
+      // const roles = await this.getRoleByUserEmail('admin@gmail.com');
+      console.log('email: ', userCredential.email);
+      const roles = await this.getRoleByUserEmail(userCredential.email);
+
+      if (!roles) {
+        return false; // User dont have any permission
+      }
+      const roleList = roles.map((role) => {
+        return role.name;
+      });
+      const isUserValid = userCredential.roles.every((r) =>
+        roleList.includes(r)
+      );
+      if (!isUserValid) {
+        return false; // User dont have enough role
+      }
+      const permissionList = roles.map((role) => {
+        return role.permissions.map((permission) => {
+          return permission.name;
+        });
+      });
+      const flattenedArray = permissionList.flat();
+      const permissionListFilterd = [...new Set(flattenedArray)];
+      const userPermissionValid = permissionListFilterd.includes(
+        userCredential.permissions
+      );
+      return userPermissionValid;
+    } catch {
+      return false;
+    }
+  }
+
   async findAllRole() {
     const roles = await this.roleRepository.find();
-    let roleDataAfterFiltering = [];
+    const roleDataAfterFiltering = [];
     if (roles) {
       roles.map((role) => {
         const permissions = role.permissions.map((permission) => {

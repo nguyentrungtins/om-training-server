@@ -1,0 +1,5 @@
+{
+  "groupId": "my-kafka-consumer",
+  "kafkaTopic": "my-first-topic",
+  "broker": "localhost:9092"
+}
