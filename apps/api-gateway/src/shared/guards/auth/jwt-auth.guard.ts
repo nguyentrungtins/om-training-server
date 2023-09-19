@@ -21,7 +21,6 @@ export class JwtAuthGuard implements CanActivate {
           return false;
         } else if (decoded.exp) {
           const expirationTimestamp = Number(decoded.exp) * 1000; // Convert to milliseconds
-          console.log(expirationTimestamp);
           const currentTimestamp = Date.now();
           return currentTimestamp < expirationTimestamp;
         }

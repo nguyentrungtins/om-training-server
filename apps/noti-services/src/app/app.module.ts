@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { ConsumerModule } from '../common/consumer/consumer.module';
+import { WebsocketGateway } from '../common/websocket/websocket.gateway';
 
 @Module({
   imports: [
@@ -13,6 +14,6 @@ import { ConsumerModule } from '../common/consumer/consumer.module';
     ConsumerModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, WebsocketGateway],
 })
 export class AppModule {}

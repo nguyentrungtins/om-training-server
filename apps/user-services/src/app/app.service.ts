@@ -24,7 +24,6 @@ export class AppService implements OnModuleInit, OnApplicationShutdown {
   async helloUser() {
     return await new Promise<any>((resolve) =>
       this.usersService.send('users.userCreation', 'alo').subscribe((data) => {
-        console.log(data);
         resolve(data);
       })
     );

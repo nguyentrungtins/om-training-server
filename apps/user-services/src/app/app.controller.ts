@@ -1,4 +1,4 @@
-import { Controller, Get, Header } from '@nestjs/common';
+import { Controller, Header } from '@nestjs/common';
 
 import { AppService } from './app.service';
 import { MessagePattern, Transport } from '@nestjs/microservices';

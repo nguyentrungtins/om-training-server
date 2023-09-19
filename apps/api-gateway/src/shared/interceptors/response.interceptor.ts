@@ -2,10 +2,12 @@ import {
   Injectable,
   NestInterceptor,
   ExecutionContext,
-  CallHandler
+  CallHandler,
+  BadGatewayException,
+  InternalServerErrorException,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 @Injectable()
 export class CommonResponseInterceptor implements NestInterceptor {
@@ -13,7 +15,7 @@ export class CommonResponseInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data) => ({
         success: true,
-        data
+        data,
       }))
     );
   }

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Patch,
   Post,
   Query,
@@ -27,15 +28,6 @@ export class UserController {
   findUser(@Query('email') email: string) {
     return this.userService.findUser(email);
   }
-  @Post('/login')
-  login(@Body() user: Login) {
-    return this.userService.login(user);
-  }
-
-  @Get('/hello')
-  hello() {
-    return this.userService.helloUser();
-  }
 
   @Get('/all')
   @UseGuards(JwtAuthGuard)
@@ -43,6 +35,11 @@ export class UserController {
   @HasPermission('admin')
   findAll() {
     return this.userService.findAllUser();
+  }
+
+  @Post('/login')
+  login(@Body() user: Login) {
+    return this.userService.login(user);
   }
 
   @Get('/role-by-email')
@@ -82,5 +79,10 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   createPermistion(@Body() permission: CreatePermissionDto) {
     return this.userService.createPermission(permission);
+  }
+
+  @Get('test-websocket')
+  testWebsocket(@Query('id') id: any) {
+    return this.userService.testWebsocket(id);
   }
 }

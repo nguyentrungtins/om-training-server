@@ -55,11 +55,6 @@ export class PermissionGuard implements CanActivate {
     return isUserHasPermission;
   }
   private async getUserEmail(authHeader: string) {
-    // console.log()
-
-    // console.log('cookies: ', request.headers.cookie);
-    // const authHeader = request.cookies['next-auth.session-token'];
-
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
 

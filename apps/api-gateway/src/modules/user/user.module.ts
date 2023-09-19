@@ -10,6 +10,7 @@ import { User } from '../../shared/entities/User.entity';
 import { Role } from '../../shared/entities/Role.entity';
 import { Permission } from '../../shared/entities/Permission.entity';
 import { PermissionsModule } from '../permissions/permission.module';
+import { WebSocketGatewayModule } from '../gateway/websocket.module';
 
 @Module({
   imports: [
@@ -35,9 +36,15 @@ import { PermissionsModule } from '../permissions/permission.module';
         },
       },
     ]),
+    WebSocketGatewayModule,
   ],
   controllers: [UserController],
-  providers: [UserService, JwtAuthGuard, PermissionsModule],
+  providers: [
+    UserService,
+    JwtAuthGuard,
+    PermissionsModule,
+    WebSocketGatewayModule,
+  ],
   exports: [JwtAuthGuard, UserService],
 })
 export class UserModule {}
